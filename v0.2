@@ -1,6 +1,3 @@
--- [[ VANILLAHUB / XQUARTLY v50 - KRYPTON THEME EDITION ]]
--- Özellikler: UI Sync Config, Ambient/Fog Motoru, Smart Raycast ESP, Full Menu
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -9,7 +6,6 @@ local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
 local CurrentCamera = workspace.CurrentCamera
 
--- ESKİ ESP TEMİZLİĞİ
 pcall(function()
     if CurrentCamera then
         for _, child in pairs(CurrentCamera:GetChildren()) do
@@ -18,9 +14,6 @@ pcall(function()
     end
 end)
 
--- ==========================================
--- MERKEZİ VERİ TABANI
--- ==========================================
 local Config = {
     -- Combat
     Aimbot = false, DisableOnReload = true, EnableOnScope = false,
@@ -30,7 +23,6 @@ local Config = {
     PartSelection = "Head", AimPart = "Head", Triggerbot = false,
     Mevlana = false, MevlanaSpeed = 80, NoRecoil = false, ThirdPerson = false,
     
-    -- Visuals (Bağımsız Sistemler)
     AmbientEnabled = false, Ambient = Color3.fromRGB(150, 150, 200),
     TimeEnabled = false, Time = 12, 
     BrightnessEnabled = false, BrightnessValue = 2,
@@ -38,19 +30,15 @@ local Config = {
     DisableShadows = false,
     ESP = false, SkeletonESP = false, WallColor = Color3.fromRGB(255, 0, 0), VisibleColor = Color3.fromRGB(0, 255, 0),
     
-    -- Extras & Cosmetics
     HitFeedback = false, HitSound = true, HitVolume = 1,
     KillFeedback = false, KillFlash = false, KillChams = false,
     CosmEn = true, SkinEn = false, WeapSel = "Assault Rifle", UnlEn = false,
-    
-    -- Misc & Theme
+
     ThemeSelect = "Dark", ShowWM = true, MenuKeyName = "RightControl",
-    
-    -- Config System
+
     NewConfName = "MyConfig", SelectedConfig = ""
 }
 
--- CONFIG KLASÖR SİSTEMİ
 local ConfigFolder = "VanillaHub_Configs"
 if makefolder and not isfolder(ConfigFolder) then pcall(function() makefolder(ConfigFolder) end) end
 
@@ -70,9 +58,6 @@ local function GetSavedConfigs()
     return list
 end
 
--- ==========================================
--- 🎨 FLUENT UI ENTEGRASYONU
--- ==========================================
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
 local Window = Fluent:CreateWindow({
@@ -90,9 +75,6 @@ local Tabs = {
 
 local Flags = {} -- Arayüzü güncellemek için köprü görevi görecek.
 
--- ==========================================
--- 🛡️ WATERMARK
--- ==========================================
 local Watermark
 if Drawing and Drawing.new then
     pcall(function()
@@ -102,9 +84,6 @@ if Drawing and Drawing.new then
     end)
 end
 
--- ==========================================
--- ⚔️ COMBAT SEKMESİ
--- ==========================================
 local C_Aimbot = Tabs.Combat:AddSection("Aimbot & Hedefleme")
 Flags.Aimbot = Tabs.Combat:AddToggle("AimToggle", {Title = "Enabled", Default = Config.Aimbot })
 Flags.Aimbot:OnChanged(function(v) Config.Aimbot = v end)
@@ -156,9 +135,6 @@ Flags.MevlanaSpeed:OnChanged(function(v) Config.MevlanaSpeed = v end)
 Flags.NoRecoil = Tabs.Combat:AddToggle("RecoilToggle", {Title = "No Recoil", Default = Config.NoRecoil })
 Flags.NoRecoil:OnChanged(function(v) Config.NoRecoil = v end)
 
--- ==========================================
--- 🌍 VISUALS SEKMESİ (AYRI MODÜLLER)
--- ==========================================
 local V_ESP = Tabs.Visuals:AddSection("ESP")
 Flags.ESP = Tabs.Visuals:AddToggle("ESPTog", {Title = "ESP Enabled", Default = Config.ESP })
 Flags.ESP:OnChanged(function(v) Config.ESP = v end)
@@ -203,9 +179,6 @@ Flags.FogEnd:OnChanged(function(v) Config.FogEnd = v end)
 Flags.DisableShadows = Tabs.Visuals:AddToggle("DisableShad", {Title = "Disable Global Shadows", Default = Config.DisableShadows })
 Flags.DisableShadows:OnChanged(function(v) Config.DisableShadows = v end)
 
--- ==========================================
--- ✨ EXTRAS & 👕 COSMETICS SEKMELERİ
--- ==========================================
 local E_Feedback = Tabs.Extras:AddSection("Hit/Kill Feedback")
 Flags.HitFeedback = Tabs.Extras:AddToggle("HitEn", {Title = "Hit Feedback Enabled", Default = Config.HitFeedback })
 Flags.HitFeedback:OnChanged(function(v) Config.HitFeedback = v end)
@@ -232,9 +205,6 @@ Flags.WeapSel:OnChanged(function(v) Config.WeapSel = v end)
 Flags.UnlEn = Tabs.Cosmetics:AddToggle("UnlEn", {Title = "Unlock All Enabled", Default = Config.UnlEn })
 Flags.UnlEn:OnChanged(function(v) Config.UnlEn = v end)
 
--- ==========================================
--- ⚙️ SETTINGS SEKMESİ (JSON & UI SİSTEMİ FİXLENDİ)
--- ==========================================
 local S_Menu = Tabs.Settings:AddSection("Menu Settings")
 
 Tabs.Settings:AddKeybind("MenuKeybd", {Title = "Menu Keybind", Mode = "Toggle", Default = Config.MenuKeyName, Callback = function() end}):OnChanged(function(v)
@@ -262,7 +232,6 @@ ConfigDropdown:OnChanged(function(v) Config.SelectedConfig = v end)
 
 Tabs.Settings:AddButton({Title = "Refresh List", Callback = function() ConfigDropdown:SetValues(GetSavedConfigs()) end})
 
--- KAYDET (SAVE)
 Tabs.Settings:AddButton({Title = "Save Config", Callback = function() 
     if writefile then
         local saveTable = {}
@@ -279,7 +248,6 @@ Tabs.Settings:AddButton({Title = "Save Config", Callback = function()
     end
 end})
 
--- YÜKLE (LOAD) VE ARAYÜZÜ ANINDA GÜNCELLE
 Tabs.Settings:AddButton({Title = "Load Selected Config", Callback = function() 
     local filePath = ConfigFolder .. "/" .. Config.SelectedConfig .. ".json"
     if readfile and isfile and isfile(filePath) then
@@ -294,7 +262,7 @@ Tabs.Settings:AddButton({Title = "Load Selected Config", Callback = function()
                 
                 Config[k] = val
                 
-                -- SİHRİN OLDUĞU YER: Arayüzdeki Şalterleri ve Renkleri Görsel Olarak Güncelle
+            
                 if Flags[k] then
                     pcall(function()
                         Flags[k]:SetValue(val)
@@ -307,10 +275,6 @@ Tabs.Settings:AddButton({Title = "Load Selected Config", Callback = function()
         end
     end
 end})
-
--- ==========================================
--- 🛠️ OYUN MOTORU & DÖNGÜLERİ (LOGIC)
--- ==========================================
 
 -- AMBIENT & FOG MOTORU (HEPSİ BAĞIMSIZ HALE GETİRİLDİ)
 local OrigLighting = {Ambient = Lighting.Ambient, OutdoorAmbient = Lighting.OutdoorAmbient, ClockTime = Lighting.ClockTime, Brightness = Lighting.Brightness, FogEnd = Lighting.FogEnd, FogColor = Lighting.FogColor, GlobalShadows = Lighting.GlobalShadows}
@@ -326,12 +290,10 @@ RunService.RenderStepped:Connect(function()
         Lighting.OutdoorAmbient = OrigLighting.OutdoorAmbient 
         Lighting.ColorShift_Top = Color3.fromRGB(0, 0, 0)
     end
-    
-    -- Zaman ve Parlaklık
+
     if Config.TimeEnabled then Lighting.ClockTime = Config.Time else Lighting.ClockTime = OrigLighting.ClockTime end
     if Config.BrightnessEnabled then Lighting.Brightness = Config.BrightnessValue else Lighting.Brightness = OrigLighting.Brightness end
-    
-    -- Sis Kontrolü
+
     if Config.FogEnabled then 
         Lighting.FogEnd = Config.FogEnd 
         Lighting.FogColor = Config.FogColor 
@@ -339,12 +301,10 @@ RunService.RenderStepped:Connect(function()
         Lighting.FogEnd = OrigLighting.FogEnd
         Lighting.FogColor = OrigLighting.FogColor 
     end
-    
-    -- Gölgeler
+
     if Config.DisableShadows then Lighting.GlobalShadows = false else Lighting.GlobalShadows = OrigLighting.GlobalShadows end
 end)
 
--- SMART RAYCAST FONKSİYONU (DUVAR KONTROLÜ)
 local function IsPlayerVisible(targetPlayer)
     if not targetPlayer.Character then return false end
     local head = targetPlayer.Character:FindFirstChild("Head") or targetPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -373,7 +333,6 @@ local function IsPlayerVisible(targetPlayer)
     return false
 end
 
--- Aimbot Hedef Bulucu
 local function GetAimPart(character)
     if Config.AimPart == "Head" then return character:FindFirstChild("Head")
     elseif Config.AimPart == "Torso" then return character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
