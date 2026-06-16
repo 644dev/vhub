@@ -1,0 +1,363 @@
+-- [[ KH / XQUARTLY HUB v50 - KRYPTON THEME EDITION ]]
+-- Özellikler: Sticky Aimbot, İskelet ESP, Visuals Kontrolü, Hit Feedback
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+local LocalPlayer = Players.LocalPlayer
+
+-- ESKİ ESP TEMİZLİĞİ
+pcall(function()
+    local CurrentCamera = workspace.CurrentCamera
+    if CurrentCamera then
+        for _, child in pairs(CurrentCamera:GetChildren()) do
+            if child:IsA("Highlight") and string.find(child.Name, "ESP_") then child:Destroy() end
+        end
+    end
+end)
+
+-- MERKEZİ VERİ TABANI (FOTOĞRAFLARDAKİ AYARLAR)
+local Config = {
+    -- Combat
+    Aimbot = false, DisableOnReload = true, EnableOnScope = false,
+    ReactionTime = 0, SwitchDelay = 0, AimbotType = "Linear",
+    Smoothing = 1, Speed = 0.1, Strength = 1,
+    TargetFOV = 150, TargetType = "Surface", Reduction = 0, Center = true,
+    PartSelection = "Head", AimPart = "Head", Triggerbot = false,
+    Mevlana = false, MevlanaSpeed = 80, NoRecoil = false, ThirdPerson = false,
+    
+    -- Visuals (Lighting & Effects)
+    LightingEnabled = false, Ambient = Color3.fromRGB(150, 150, 150),
+    ClockTime = false, Time = 12, Brightness = false, BrightnessValue = 2,
+    ColorShift = Color3.fromRGB(255, 255, 255),
+    Fog = false, FogStart = 0, FogEnd = 10000, 
+    GlobalShadows = false, ShadowSoftness = 0.5,
+    ESP = false, SkeletonESP = false, WallColor = Color3.fromRGB(255, 0, 0), VisibleColor = Color3.fromRGB(0, 255, 0),
+    
+    -- Extras (Feedback)
+    HitFeedback = false, HitSound = true, HitVolume = 1,
+    KillFeedback = false, KillFlash = false, KillChams = false,
+    
+    -- Misc
+    MenuKey = Enum.KeyCode.RightControl
+}
+
+-- ==========================================
+-- 🎨 FLUENT UI ENTEGRASYONU (KH TEMA)
+-- ==========================================
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "KH Hub",
+    SubTitle = "Combat, Visuals, Extras",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(680, 500),
+    Acrylic = true,
+    Theme = "Dark", -- Orijinal fotoğraflardaki gibi karanlık tema
+    MinimizeKey = Config.MenuKey
+})
+
+-- SEKMELER (Sol İkonlu Menü)
+local Tabs = {
+    Combat = Window:AddTab({ Title = "Combat", Icon = "swords" }),
+    Visuals = Window:AddTab({ Title = "Visuals", Icon = "globe" }),
+    Extras = Window:AddTab({ Title = "Extras", Icon = "sparkles" }),
+    Cosmetics = Window:AddTab({ Title = "Cosmetics", Icon = "shirt" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+}
+
+-- ==========================================
+-- ⚔️ COMBAT SEKMESİ (Görsel 1)
+-- ==========================================
+local C_Aimbot = Tabs.Combat:AddSection("Aimbot & Hedefleme (General)")
+
+Tabs.Combat:AddToggle("AimToggle", {Title = "Enabled", Default = false }):OnChanged(function(v) Config.Aimbot = v end)
+Tabs.Combat:AddToggle("DisableRel", {Title = "Disable On Reload", Default = true })
+Tabs.Combat:AddToggle("OnlyScope", {Title = "Enable Only On Scope", Default = false })
+
+Tabs.Combat:AddSlider("SwitchDel", {Title = "Switch Delay (s)", Default = 0, Min = 0, Max = 5, Rounding = 1})
+Tabs.Combat:AddSlider("ReactionT", {Title = "Reaction Time (s)", Default = 0, Min = 0, Max = 1, Rounding = 1})
+Tabs.Combat:AddDropdown("AimType", {Title = "Aimbot Type", Values = {"Linear", "Exponential", "Dynamic"}, Default = 1})
+
+Tabs.Combat:AddSlider("Smooth", {Title = "Smoothing", Default = 1, Min = 1, Max = 10, Rounding = 1})
+Tabs.Combat:AddSlider("AimSpeed", {Title = "Speed", Default = 0.1, Min = 0.1, Max = 2, Rounding = 1})
+Tabs.Combat:AddSlider("AimStrength", {Title = "Strength", Default = 1, Min = 0.1, Max = 5, Rounding = 1})
+
+local C_Target = Tabs.Combat:AddSection("Target & FOV")
+Tabs.Combat:AddSlider("FovSlider", {Title = "FOV Boyutu", Default = 150, Min = 50, Max = 800, Rounding = 0}):OnChanged(function(v) Config.TargetFOV = v end)
+Tabs.Combat:AddDropdown("PartSel", {Title = "Part Selection (Hedef)", Values = {"Head", "Torso", "Closest"}, Default = 1}):OnChanged(function(v)
+    if v == "Closest" then Config.AimPart = "Torso" else Config.AimPart = v end
+end)
+
+local C_Other = Tabs.Combat:AddSection("Ragebot & Automation")
+Tabs.Combat:AddToggle("TrigToggle", {Title = "Triggerbot Enabled", Default = false }):OnChanged(function(v) Config.Triggerbot = v end)
+Tabs.Combat:AddToggle("MevlanaToggle", {Title = "Ragebot (Mevlana)", Default = false }):OnChanged(function(v) Config.Mevlana = v end)
+Tabs.Combat:AddSlider("SpinSlider", {Title = "Spin Speed", Default = 80, Min = 16, Max = 250, Rounding = 0}):OnChanged(function(v) Config.MevlanaSpeed = v end)
+Tabs.Combat:AddToggle("RecoilToggle", {Title = "Weapon Modifications (No Recoil)", Default = false }):OnChanged(function(v) Config.NoRecoil = v end)
+
+-- ==========================================
+-- 🌍 VISUALS SEKMESİ (Görsel 2)
+-- ==========================================
+local V_ESP = Tabs.Visuals:AddSection("ESP (Ekstra)")
+Tabs.Visuals:AddToggle("ESPTog", {Title = "ESP Enabled", Default = false }):OnChanged(function(v) Config.ESP = v end)
+Tabs.Visuals:AddToggle("SkelTog", {Title = "Skeleton Mode", Default = false }):OnChanged(function(v) Config.SkeletonESP = v end)
+Tabs.Visuals:AddColorpicker("WallC", {Title = "Wall Color", Default = Color3.fromRGB(255, 0, 0)}):OnChanged(function(v) Config.WallColor = v end)
+Tabs.Visuals:AddColorpicker("VisC", {Title = "Visible Color", Default = Color3.fromRGB(0, 255, 0)}):OnChanged(function(v) Config.VisibleColor = v end)
+
+local V_Lighting = Tabs.Visuals:AddSection("Lighting (General)")
+Tabs.Visuals:AddToggle("LightEnabled", {Title = "Enabled", Default = false }):OnChanged(function(v) Config.LightingEnabled = v end)
+Tabs.Visuals:AddColorpicker("Ambient", {Title = "Ambient", Default = Color3.fromRGB(150, 150, 200)}):OnChanged(function(v) Config.Ambient = v end)
+Tabs.Visuals:AddToggle("ClockT", {Title = "Clock Time Override", Default = false }):OnChanged(function(v) Config.ClockTime = v end)
+Tabs.Visuals:AddSlider("TimeS", {Title = "Time", Default = 12, Min = 0, Max = 24, Rounding = 1}):OnChanged(function(v) Config.Time = v end)
+Tabs.Visuals:AddToggle("BrightT", {Title = "Brightness Override", Default = false }):OnChanged(function(v) Config.Brightness = v end)
+Tabs.Visuals:AddSlider("BrightV", {Title = "Value", Default = 2, Min = 0, Max = 10, Rounding = 1}):OnChanged(function(v) Config.BrightnessValue = v end)
+
+local V_Shadows = Tabs.Visuals:AddSection("Shadows & Environment")
+Tabs.Visuals:AddToggle("FogT", {Title = "Fog Override", Default = false }):OnChanged(function(v) Config.Fog = v end)
+Tabs.Visuals:AddSlider("FogEnd", {Title = "Fog End", Default = 10000, Min = 100, Max = 100000, Rounding = 0}):OnChanged(function(v) Config.FogEnd = v end)
+Tabs.Visuals:AddToggle("DisableShad", {Title = "Disable Global Shadows", Default = false }):OnChanged(function(v) Config.GlobalShadows = v end)
+
+-- ==========================================
+-- ✨ EXTRAS SEKMESİ (Görsel 3)
+-- ==========================================
+local E_Feedback = Tabs.Extras:AddSection("Hit Feedback")
+Tabs.Extras:AddToggle("HitEn", {Title = "Enabled", Default = false }):OnChanged(function(v) Config.HitFeedback = v end)
+Tabs.Extras:AddToggle("PlayS", {Title = "Play Sound", Default = true }):OnChanged(function(v) Config.HitSound = v end)
+Tabs.Extras:AddDropdown("HeadS", {Title = "Head Sound", Values = {"AR2 Body", "Rust Headshot", "Neverlose"}, Default = 1})
+Tabs.Extras:AddSlider("VolS", {Title = "Volume", Default = 1, Min = 0, Max = 2, Rounding = 1}):OnChanged(function(v) Config.HitVolume = v end)
+
+local E_Kill = Tabs.Extras:AddSection("Kill Feedback")
+Tabs.Extras:AddToggle("KillEn", {Title = "Enabled", Default = false }):OnChanged(function(v) Config.KillFeedback = v end)
+Tabs.Extras:AddToggle("KFlash", {Title = "Kill Flash", Default = false }):OnChanged(function(v) Config.KillFlash = v end)
+Tabs.Extras:AddToggle("KChams", {Title = "Show Chams", Default = false }):OnChanged(function(v) Config.KillChams = v end)
+
+-- ==========================================
+-- 👕 COSMETICS SEKMESİ (Görsel 4)
+-- ==========================================
+local Co_General = Tabs.Cosmetics:AddSection("Main")
+Tabs.Cosmetics:AddToggle("CosmEn", {Title = "Cosmetics Enabled", Default = true })
+Tabs.Cosmetics:AddToggle("SkinEn", {Title = "Skin Changer Enabled", Default = false })
+Tabs.Cosmetics:AddDropdown("WeapSel", {Title = "Weapon", Values = {"Assault Rifle", "Sniper", "Pistol"}, Default = 1})
+
+local Co_Unlock = Tabs.Cosmetics:AddSection("Unlock All")
+Tabs.Cosmetics:AddToggle("UnlEn", {Title = "Enabled", Default = false })
+Tabs.Cosmetics:AddDropdown("CosmType", {Title = "Cosmetics", Values = {"Skin, Wrap, Charm", "All"}, Default = 1})
+
+-- ==========================================
+-- ⚙️ SETTINGS SEKMESİ (Görsel 5)
+-- ==========================================
+local S_Menu = Tabs.Settings:AddSection("Menu")
+Tabs.Settings:AddKeybind("MenuKeybd", {Title = "Menu Keybind", Mode = "Toggle", Default = "RightControl", Callback = function() end}):OnChanged(function(v)
+    Window.MinimizeKey = v
+end)
+Tabs.Settings:AddDropdown("FontS", {Title = "Font", Values = {"Default", "Gotham", "Montserrat"}, Default = 1})
+Tabs.Settings:AddToggle("ShowWM", {Title = "Show Watermark", Default = true })
+
+local S_Config = Tabs.Settings:AddSection("Configuration")
+Tabs.Settings:AddInput("ConfName", {Title = "Config Name", Default = "MyConfig"})
+Tabs.Settings:AddButton({Title = "Save", Callback = function() Fluent:Notify({Title="Config", Content="Saved successfully."}) end})
+Tabs.Settings:AddButton({Title = "Load", Callback = function() Fluent:Notify({Title="Config", Content="Loaded successfully."}) end})
+
+-- ==========================================
+-- 🛠️ OYUN MOTORU & DÖNGÜLERİ (LOGIC)
+-- ==========================================
+
+-- 1. FOV ÇEMBERİ
+local FOVCircle
+if Drawing and Drawing.new then
+    pcall(function()
+        FOVCircle = Drawing.new("Circle")
+        FOVCircle.Thickness = 1.5
+        FOVCircle.Color = Color3.fromRGB(255, 100, 70) -- KH Turuncusu
+        FOVCircle.Filled = false
+        FOVCircle.Visible = false
+    end)
+end
+
+-- 2. LIGHTING & ENVIRONMENT MOTORU
+local OrigLighting = {Ambient = Lighting.Ambient, ClockTime = Lighting.ClockTime, Brightness = Lighting.Brightness, FogEnd = Lighting.FogEnd, GlobalShadows = Lighting.GlobalShadows}
+RunService.RenderStepped:Connect(function()
+    if Config.LightingEnabled then
+        Lighting.Ambient = Config.Ambient
+        if Config.ClockTime then Lighting.ClockTime = Config.Time end
+        if Config.Brightness then Lighting.Brightness = Config.BrightnessValue end
+        if Config.Fog then Lighting.FogEnd = Config.FogEnd else Lighting.FogEnd = 100000 end
+        if Config.GlobalShadows then Lighting.GlobalShadows = false end
+    else
+        Lighting.Ambient = OrigLighting.Ambient
+        Lighting.ClockTime = OrigLighting.ClockTime
+        Lighting.Brightness = OrigLighting.Brightness
+        Lighting.FogEnd = OrigLighting.FogEnd
+        Lighting.GlobalShadows = OrigLighting.GlobalShadows
+    end
+end)
+
+-- 3. NO RECOIL MOTORU
+task.spawn(function()
+    while true do
+        task.wait(0.3)
+        if Config.NoRecoil and getgc then
+            pcall(function()
+                for _, obj in pairs(getgc(true)) do
+                    if type(obj) == "table" and (rawget(obj, "Recoil") or rawget(obj, "Spread")) then
+                        obj.Recoil, obj.MaxRecoil, obj.Spread, obj.Inaccuracy = 0, 0, 0, 0
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- 4. HEDEF BÖLGE BULUCU
+local function GetAimPart(character)
+    if Config.AimPart == "Head" then return character:FindFirstChild("Head")
+    elseif Config.AimPart == "Torso" then return character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+    end
+    return character:FindFirstChild("Head")
+end
+
+-- 5. İSKELET ESP VE DRAWING ALTYAPISI
+local DrawingAPI_Available = Drawing and Drawing.new ~= nil
+local SkeletonCache, HeadCircleCache = {}, {}
+local Bones = {
+    {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"}, {"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"}, {"LeftLowerArm", "LeftHand"},
+    {"UpperTorso", "RightUpperArm"}, {"RightUpperArm", "RightLowerArm"}, {"RightLowerArm", "RightHand"}, {"LowerTorso", "LeftUpperLeg"}, {"LeftUpperLeg", "LeftLowerLeg"},
+    {"LowerTorso", "RightUpperLeg"}, {"RightUpperLeg", "RightLowerLeg"}, {"Head", "Torso"}, {"Torso", "Left Arm"}, {"Torso", "Right Arm"}, {"Torso", "Left Leg"}, {"Torso", "Right Leg"}
+}
+
+local function ClearESPData(player)
+    if SkeletonCache[player] then for _, line in pairs(SkeletonCache[player]) do pcall(function() line:Remove() end) end SkeletonCache[player] = nil end
+    if HeadCircleCache[player] then pcall(function() HeadCircleCache[player]:Remove() end) HeadCircleCache[player] = nil end
+    if player.Character and player.Character:FindFirstChild("KH_ESP") then player.Character.KH_ESP:Destroy() end
+end
+Players.PlayerRemoving:Connect(ClearESPData)
+
+local function GetDrawLine(player, index)
+    if not SkeletonCache[player] then SkeletonCache[player] = {} end
+    if not SkeletonCache[player][index] then
+        local line = Drawing.new("Line") line.Thickness = 1.8 line.Transparency = 1 line.Visible = false SkeletonCache[player][index] = line
+    end
+    return SkeletonCache[player][index]
+end
+
+-- 6. CAMERA, STICKY AIM & ESP MOTORU
+local currentAngle = 0
+local CurrentTargetPart = nil 
+
+RunService:BindToRenderStep("KH_CoreEngine", Enum.RenderPriority.Camera.Value + 1, function()
+    local CurrentCamera = workspace.CurrentCamera
+    if not CurrentCamera then return end
+    
+    local char = LocalPlayer.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+
+    -- Mevlana (Ragebot)
+    if Config.Mevlana and hrp then
+        currentAngle = (currentAngle + math.rad(Config.MevlanaSpeed * 1.8)) % (math.pi * 2)
+        hrp.CFrame = CFrame.new(hrp.Position) * CFrame.Angles(0, currentAngle, 0)
+    end
+
+    -- STICKY AIMBOT FİXİ
+    if Config.Aimbot then
+        local isAimKeyDown = UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) or UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+        
+        if isAimKeyDown then
+            local targetInvalid = not CurrentTargetPart or not CurrentTargetPart:IsDescendantOf(workspace)
+            if CurrentTargetPart and CurrentTargetPart.Parent and CurrentTargetPart.Parent:FindFirstChild("Humanoid") then
+                if CurrentTargetPart.Parent.Humanoid.Health <= 0 then targetInvalid = true end
+            end
+
+            if targetInvalid then
+                local closest = nil
+                local dist = Config.TargetFOV
+                for _, p in pairs(Players:GetPlayers()) do
+                    if p ~= LocalPlayer and p.Character then
+                        local targetPart = GetAimPart(p.Character)
+                        if targetPart then
+                            local pos, on = CurrentCamera:WorldToViewportPoint(targetPart.Position)
+                            if on then
+                                local d = (Vector2.new(pos.X, pos.Y) - UserInputService:GetMouseLocation()).Magnitude
+                                if d < dist then dist = d closest = targetPart end
+                            end
+                        end
+                    end
+                end
+                CurrentTargetPart = closest
+            end
+            
+            if CurrentTargetPart then
+                -- Hit Feedback Simülasyonu (Ateş edildiğinde/Hedef varken ses)
+                if Config.HitFeedback and Config.HitSound and math.random(1, 20) == 1 then
+                    local s = Instance.new("Sound", workspace)
+                    s.SoundId = "rbxassetid://86015636" -- Örnek Hitmarker
+                    s.Volume = Config.HitVolume s.PlayOnRemove = true s:Destroy()
+                end
+                CurrentCamera.CFrame = CFrame.lookAt(CurrentCamera.CFrame.Position, CurrentTargetPart.Position)
+            end
+        else
+            CurrentTargetPart = nil
+        end
+    end
+
+    -- FOV & ESP ÇİZİMİ
+    if FOVCircle then
+        pcall(function()
+            FOVCircle.Visible = Config.Aimbot
+            FOVCircle.Radius = Config.TargetFOV
+            FOVCircle.Position = UserInputService:GetMouseLocation()
+        end)
+    end
+
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            pcall(function()
+                if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                    if Config.ESP then
+                        local finalColor = Config.WallColor
+                        local head = p.Character:FindFirstChild("Head")
+                        if head and CurrentCamera then
+                            local rayParams = RaycastParams.new()
+                            rayParams.FilterDescendantsInstances = {LocalPlayer.Character, p.Character}
+                            rayParams.FilterType = Enum.RaycastFilterType.Exclude
+                            if not workspace:Raycast(CurrentCamera.CFrame.Position, head.Position - CurrentCamera.CFrame.Position, rayParams) then
+                                finalColor = Config.VisibleColor
+                            end
+                        end
+                        
+                        if Config.SkeletonESP then
+                            if p.Character:FindFirstChild("KH_ESP") then p.Character.KH_ESP:Destroy() end
+                            if DrawingAPI_Available then
+                                for i, pair in ipairs(Bones) do
+                                    local part1, part2 = p.Character:FindFirstChild(pair[1]), p.Character:FindFirstChild(pair[2])
+                                    local line = GetDrawLine(p, i)
+                                    if part1 and part2 then
+                                        local pos1, on1 = CurrentCamera:WorldToViewportPoint(part1.Position)
+                                        local pos2, on2 = CurrentCamera:WorldToViewportPoint(part2.Position)
+                                        if on1 or on2 then
+                                            line.From, line.To = Vector2.new(pos1.X, pos1.Y), Vector2.new(pos2.X, pos2.Y)
+                                            line.Color, line.Visible = finalColor, true
+                                        else line.Visible = false end
+                                    else line.Visible = false end
+                                end
+                            end
+                        else
+                            if SkeletonCache[p] then for _, l in pairs(SkeletonCache[p]) do l.Visible = false end end
+                            local high = p.Character:FindFirstChild("KH_ESP")
+                            if not high then
+                                high = Instance.new("Highlight") high.Name = "KH_ESP"
+                                high.FillTransparency = 0.4 high.OutlineTransparency = 0.2 high.Parent = p.Character
+                            end
+                            high.Adornee, high.FillColor, high.OutlineColor = p.Character, finalColor, finalColor
+                        end
+                    else
+                        ClearESPData(p)
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+Window:SelectTab(1)
