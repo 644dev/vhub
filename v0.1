@@ -1,13 +1,9 @@
--- [[ KH / XQUARTLY HUB v50 - KRYPTON THEME EDITION ]]
--- Özellikler: Sticky Aimbot, İskelet ESP, Visuals Kontrolü, Hit Feedback
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
 local LocalPlayer = Players.LocalPlayer
 
--- ESKİ ESP TEMİZLİĞİ
 pcall(function()
     local CurrentCamera = workspace.CurrentCamera
     if CurrentCamera then
@@ -17,7 +13,6 @@ pcall(function()
     end
 end)
 
--- MERKEZİ VERİ TABANI (FOTOĞRAFLARDAKİ AYARLAR)
 local Config = {
     -- Combat
     Aimbot = false, DisableOnReload = true, EnableOnScope = false,
@@ -26,8 +21,7 @@ local Config = {
     TargetFOV = 150, TargetType = "Surface", Reduction = 0, Center = true,
     PartSelection = "Head", AimPart = "Head", Triggerbot = false,
     Mevlana = false, MevlanaSpeed = 80, NoRecoil = false, ThirdPerson = false,
-    
-    -- Visuals (Lighting & Effects)
+
     LightingEnabled = false, Ambient = Color3.fromRGB(150, 150, 150),
     ClockTime = false, Time = 12, Brightness = false, BrightnessValue = 2,
     ColorShift = Color3.fromRGB(255, 255, 255),
@@ -43,9 +37,6 @@ local Config = {
     MenuKey = Enum.KeyCode.RightControl
 }
 
--- ==========================================
--- 🎨 FLUENT UI ENTEGRASYONU (KH TEMA)
--- ==========================================
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
 local Window = Fluent:CreateWindow({
@@ -58,7 +49,6 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Config.MenuKey
 })
 
--- SEKMELER (Sol İkonlu Menü)
 local Tabs = {
     Combat = Window:AddTab({ Title = "Combat", Icon = "swords" }),
     Visuals = Window:AddTab({ Title = "Visuals", Icon = "globe" }),
@@ -67,9 +57,6 @@ local Tabs = {
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
--- ==========================================
--- ⚔️ COMBAT SEKMESİ (Görsel 1)
--- ==========================================
 local C_Aimbot = Tabs.Combat:AddSection("Aimbot & Hedefleme (General)")
 
 Tabs.Combat:AddToggle("AimToggle", {Title = "Enabled", Default = false }):OnChanged(function(v) Config.Aimbot = v end)
@@ -96,9 +83,6 @@ Tabs.Combat:AddToggle("MevlanaToggle", {Title = "Ragebot (Mevlana)", Default = f
 Tabs.Combat:AddSlider("SpinSlider", {Title = "Spin Speed", Default = 80, Min = 16, Max = 250, Rounding = 0}):OnChanged(function(v) Config.MevlanaSpeed = v end)
 Tabs.Combat:AddToggle("RecoilToggle", {Title = "Weapon Modifications (No Recoil)", Default = false }):OnChanged(function(v) Config.NoRecoil = v end)
 
--- ==========================================
--- 🌍 VISUALS SEKMESİ (Görsel 2)
--- ==========================================
 local V_ESP = Tabs.Visuals:AddSection("ESP (Ekstra)")
 Tabs.Visuals:AddToggle("ESPTog", {Title = "ESP Enabled", Default = false }):OnChanged(function(v) Config.ESP = v end)
 Tabs.Visuals:AddToggle("SkelTog", {Title = "Skeleton Mode", Default = false }):OnChanged(function(v) Config.SkeletonESP = v end)
@@ -118,9 +102,6 @@ Tabs.Visuals:AddToggle("FogT", {Title = "Fog Override", Default = false }):OnCha
 Tabs.Visuals:AddSlider("FogEnd", {Title = "Fog End", Default = 10000, Min = 100, Max = 100000, Rounding = 0}):OnChanged(function(v) Config.FogEnd = v end)
 Tabs.Visuals:AddToggle("DisableShad", {Title = "Disable Global Shadows", Default = false }):OnChanged(function(v) Config.GlobalShadows = v end)
 
--- ==========================================
--- ✨ EXTRAS SEKMESİ (Görsel 3)
--- ==========================================
 local E_Feedback = Tabs.Extras:AddSection("Hit Feedback")
 Tabs.Extras:AddToggle("HitEn", {Title = "Enabled", Default = false }):OnChanged(function(v) Config.HitFeedback = v end)
 Tabs.Extras:AddToggle("PlayS", {Title = "Play Sound", Default = true }):OnChanged(function(v) Config.HitSound = v end)
@@ -132,9 +113,6 @@ Tabs.Extras:AddToggle("KillEn", {Title = "Enabled", Default = false }):OnChanged
 Tabs.Extras:AddToggle("KFlash", {Title = "Kill Flash", Default = false }):OnChanged(function(v) Config.KillFlash = v end)
 Tabs.Extras:AddToggle("KChams", {Title = "Show Chams", Default = false }):OnChanged(function(v) Config.KillChams = v end)
 
--- ==========================================
--- 👕 COSMETICS SEKMESİ (Görsel 4)
--- ==========================================
 local Co_General = Tabs.Cosmetics:AddSection("Main")
 Tabs.Cosmetics:AddToggle("CosmEn", {Title = "Cosmetics Enabled", Default = true })
 Tabs.Cosmetics:AddToggle("SkinEn", {Title = "Skin Changer Enabled", Default = false })
@@ -144,9 +122,6 @@ local Co_Unlock = Tabs.Cosmetics:AddSection("Unlock All")
 Tabs.Cosmetics:AddToggle("UnlEn", {Title = "Enabled", Default = false })
 Tabs.Cosmetics:AddDropdown("CosmType", {Title = "Cosmetics", Values = {"Skin, Wrap, Charm", "All"}, Default = 1})
 
--- ==========================================
--- ⚙️ SETTINGS SEKMESİ (Görsel 5)
--- ==========================================
 local S_Menu = Tabs.Settings:AddSection("Menu")
 Tabs.Settings:AddKeybind("MenuKeybd", {Title = "Menu Keybind", Mode = "Toggle", Default = "RightControl", Callback = function() end}):OnChanged(function(v)
     Window.MinimizeKey = v
@@ -159,11 +134,6 @@ Tabs.Settings:AddInput("ConfName", {Title = "Config Name", Default = "MyConfig"}
 Tabs.Settings:AddButton({Title = "Save", Callback = function() Fluent:Notify({Title="Config", Content="Saved successfully."}) end})
 Tabs.Settings:AddButton({Title = "Load", Callback = function() Fluent:Notify({Title="Config", Content="Loaded successfully."}) end})
 
--- ==========================================
--- 🛠️ OYUN MOTORU & DÖNGÜLERİ (LOGIC)
--- ==========================================
-
--- 1. FOV ÇEMBERİ
 local FOVCircle
 if Drawing and Drawing.new then
     pcall(function()
@@ -175,7 +145,6 @@ if Drawing and Drawing.new then
     end)
 end
 
--- 2. LIGHTING & ENVIRONMENT MOTORU
 local OrigLighting = {Ambient = Lighting.Ambient, ClockTime = Lighting.ClockTime, Brightness = Lighting.Brightness, FogEnd = Lighting.FogEnd, GlobalShadows = Lighting.GlobalShadows}
 RunService.RenderStepped:Connect(function()
     if Config.LightingEnabled then
@@ -193,7 +162,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 3. NO RECOIL MOTORU
 task.spawn(function()
     while true do
         task.wait(0.3)
@@ -209,7 +177,6 @@ task.spawn(function()
     end
 end)
 
--- 4. HEDEF BÖLGE BULUCU
 local function GetAimPart(character)
     if Config.AimPart == "Head" then return character:FindFirstChild("Head")
     elseif Config.AimPart == "Torso" then return character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
@@ -217,7 +184,6 @@ local function GetAimPart(character)
     return character:FindFirstChild("Head")
 end
 
--- 5. İSKELET ESP VE DRAWING ALTYAPISI
 local DrawingAPI_Available = Drawing and Drawing.new ~= nil
 local SkeletonCache, HeadCircleCache = {}, {}
 local Bones = {
@@ -241,7 +207,6 @@ local function GetDrawLine(player, index)
     return SkeletonCache[player][index]
 end
 
--- 6. CAMERA, STICKY AIM & ESP MOTORU
 local currentAngle = 0
 local CurrentTargetPart = nil 
 
