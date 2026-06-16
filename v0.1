@@ -218,13 +218,11 @@ RunService:BindToRenderStep("KH_CoreEngine", Enum.RenderPriority.Camera.Value + 
     if not char then return end
     local hrp = char:FindFirstChild("HumanoidRootPart")
 
-    -- Mevlana (Ragebot)
     if Config.Mevlana and hrp then
         currentAngle = (currentAngle + math.rad(Config.MevlanaSpeed * 1.8)) % (math.pi * 2)
         hrp.CFrame = CFrame.new(hrp.Position) * CFrame.Angles(0, currentAngle, 0)
     end
 
-    -- STICKY AIMBOT FİXİ
     if Config.Aimbot then
         local isAimKeyDown = UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) or UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
         
@@ -266,7 +264,6 @@ RunService:BindToRenderStep("KH_CoreEngine", Enum.RenderPriority.Camera.Value + 
         end
     end
 
-    -- FOV & ESP ÇİZİMİ
     if FOVCircle then
         pcall(function()
             FOVCircle.Visible = Config.Aimbot
